@@ -23,6 +23,9 @@ class _mapPageState extends State<mapPage> {
 
     for(int i = 0;i < _vehicles.length;i++){
       if (_vehicles[i].model!.contains(query)){
+        if (_vehicles[i].label == null){
+          _vehicles[i].label = "N/A";
+        }
         vehicles.add(_vehicles[i]);
       }
     }
@@ -72,6 +75,14 @@ class _mapPageState extends State<mapPage> {
         body: SlidingUpPanel(
             minHeight: 50,
             color: Theme.of(context).backgroundColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                spreadRadius: 5,
+                blurRadius: 5,
+                offset: Offset(0, 3), // changes position of shadow
+              ),
+            ],
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(25),
               topRight: Radius.circular(25),
@@ -98,6 +109,8 @@ class _mapPageState extends State<mapPage> {
       initialCameraPosition: defaultCameraPosition,
       mapType: MapType.normal,
       zoomControlsEnabled: false,
+      myLocationEnabled: true,
+      myLocationButtonEnabled: false,
       onMapCreated: (GoogleMapController controller) {
         _controller.complete(controller);
         controller.setMapStyle(_mapStyle);
@@ -114,14 +127,6 @@ class _mapPageState extends State<mapPage> {
       child: Stack(
         children: [
           Container(
-            padding: EdgeInsets.only(top: 10),
-            child: Row(
-              children: [
-                Text("Displaying 0 vehicles",style: TextStyle(color: Colors.lime),),
-              ],
-            ),
-          ),
-          Container(
             padding: EdgeInsets.all(22.5),
             child: Align(
               alignment: Alignment.topCenter,
@@ -136,7 +141,7 @@ class _mapPageState extends State<mapPage> {
             ),
           ),
           FutureBuilder(
-            future: getVehicles("Ikarus 4"),
+            future: getVehicles(""),
             builder: (context, snapshot){
               if (snapshot.connectionState == ConnectionState.done){
                 return Container(
@@ -158,47 +163,68 @@ class _mapPageState extends State<mapPage> {
     );
   }
 
+  late PageStorageKey _key;
+
+
   Widget buildListItem(int i){
-    return Card(
-        child: Container(
-          padding: EdgeInsets.all(0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Chip(
-                    backgroundColor: Colors.blue,
-                    label: Text(vehicles[i].licensePlate!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-                  ),
-                  Text(vehicles[i].model!)
-                ],
-              ),
-              Row(
-                children: [
-                  Chip(
-                    backgroundColor: Colors.blue,
-                    label: Text(vehicles[i].licensePlate!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-                  ),
-                  Text(vehicles[i].model!)
-                ],
-              ),
-              Row(
-                children: [
-                  Chip(
-                    backgroundColor: Colors.blue,
-                    label: Text(vehicles[i].licensePlate!),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
-                  ),
-                  Text(vehicles[i].model!)
-                ],
-              )
-            ],
-          ),
-        )
+    Completer<Response> _responseCompleter = new Completer();
+    return Container(
+      child: ExpansionTile(
+        title: Text(vehicles[i].model!),
+        onExpansionChanged: (bool isExpanding) {
+          if (!_responseCompleter.isCompleted) {
+            _responseCompleter.complete(API.getRoute(vehicles[i].routeId!));
+            print("Getting route data " + vehicles[i].routeId!);
+          }
+        },
+        children: [
+          FutureBuilder(
+            future: _responseCompleter.future,
+            builder: (context,snapshot){
+              if (snapshot.connectionState == ConnectionState.done){
+                Response response = snapshot.data as Response;
+                if(response.statusCode == 200){
+                  return Container(
+                    padding: EdgeInsets.only(left: 15, right: 20),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Chip(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(5))),
+                              label: Container(
+                                width: 30,
+                                child: Text(response.route!.shortName.toString(), style: TextStyle(color: response.route!.textColor),),
+                              ),
+                              backgroundColor: response.route!.color,
+                            ),
+                            Text(
+                                " >> " + vehicles[i].label!
+                            )
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(vehicles[i].licensePlate! + " | " + vehicles[i].vehicleId!)
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                }else{
+                  return Text(response.statusCode.toString());
+                }
+              }else{
+                return CircularProgressIndicator();
+              }
+            },
+          )
+        ],
+      )
     );
   }
+
+
 
   Widget buildFloatingSearchBar() {
     final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;

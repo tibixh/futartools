@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -30,20 +31,22 @@ class API{
 
   }
 
-  static Future<Vehicle> getVehicle(String vehicleId) async{
+  static Future<Response> getVehicle(String vehicleId) async{
     http.Response response = await http.get(Uri.parse("https://futar.bkk.hu/api/query/v1/ws/otp/api/where/trip-details.json?key=&version=3&appVersion=1&includeReferences=false&tripId=&vehicleId=" + vehicleId + "&date="));
     if(response.statusCode == 200){
       String res = utf8.decode(response.bodyBytes);
       Map<String,dynamic> json = jsonDecode(res);
       Map<String,dynamic> jsonvehicle = json['data']['entry']['vehicle'];
 
-      return Vehicle(jsonvehicle['vehicleId'],jsonvehicle['model'],jsonvehicle['label'],jsonvehicle['routeId'],jsonvehicle['deviated'],jsonvehicle['licensePlate']);
+      Vehicle vehicle = Vehicle(jsonvehicle['vehicleId'],jsonvehicle['model'],jsonvehicle['label'],jsonvehicle['routeId'],jsonvehicle['deviated'],jsonvehicle['licensePlate']);
+
+      return Response(response.statusCode, vehicle, null);
     }else{
-      throw response.statusCode;
+      return Response(response.statusCode, null, null);
     }
   }
 
-  static Future<Routee> getRoute(String routeId) async{
+  static Future<Response> getRoute(String routeId) async{
     http.Response response = await http.get(Uri.parse("https://futar.bkk.hu/api/query/v1/ws/otp/api/where/route-details.json?key=&version=3&appVersion=1&includeReferences=false&routeId=" + routeId + "&related="));
     if(response.statusCode == 200){
       String res = utf8.decode(response.bodyBytes);
@@ -52,10 +55,12 @@ class API{
 
       Color color = hexToColor("#" + jsonroute['color']);
       Color textColor = hexToColor("#" + jsonroute['textColor']);
-      return Routee(jsonroute['id'],jsonroute['shortName'],jsonroute['description'],color,textColor);
+      Routee route =  Routee(jsonroute['id'],jsonroute['shortName'],jsonroute['description'],color,textColor);
+
+      return Response(response.statusCode, null, route);
     }
     else{
-      throw response.statusCode;
+      return Response(response.statusCode, null, null);
     }
 
   }
@@ -66,6 +71,14 @@ class API{
     return new Color(int.parse(code.substring(1, 7), radix: 16) + 0xFF000000);
   }
 
+}
+
+class Response{
+  int? statusCode;
+  Vehicle? vehicle;
+  Routee? route;
+
+  Response(this.statusCode,this.vehicle,this.route);
 }
 
 class Vehicle{
@@ -80,11 +93,11 @@ class Vehicle{
 }
 
 class Routee{
-  String routeId;
-  String shortName;
-  String description;
-  Color color;
-  Color textColor;
+  String? routeId;
+  String? shortName;
+  String? description;
+  Color? color;
+  Color? textColor;
 
   Routee(this.routeId,this.shortName,this.description,this.color,this.textColor);
 }
