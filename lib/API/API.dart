@@ -9,7 +9,7 @@ class API{
 
   static Future<List<Vehicle>> getVehicles(bool downloadNew)async{
     if (downloadNew){
-      http.Response response = await http.get(Uri.parse('https://futar.bkk.hu/api/query/v1/ws/otp/api/where/vehicles-for-location.json?key=&version=3&appVersion=1&includeReferences=false&lon=47.468693&lat=19.068402&latSpan=&lonSpan=&radius=200&query=&ifModifiedSince='));
+      http.Response response = await http.get(Uri.parse('https://futar.bkk.hu/api/query/v1/ws/otp/api/where/vehicles-for-location.json?version=3&appVersion=1&lon=47.468693&lat=19.068402&radius=200&query='));
       if (response.statusCode == 200){
         String res = utf8.decode(response.bodyBytes);
         Map<String,dynamic> json = jsonDecode(res);
@@ -69,12 +69,12 @@ class API{
 }
 
 class Vehicle{
-  String vehicleId;
-  String model;
-  String label;
-  String routeId;
-  bool deviated;
-  String licensePlate;
+  String? vehicleId;
+  String? model;
+  String? label;
+  String? routeId;
+  bool? deviated;
+  String? licensePlate;
 
   Vehicle(this.vehicleId, this.model, this.label, this.routeId,this.deviated,this.licensePlate);
 }

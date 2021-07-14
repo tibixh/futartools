@@ -22,7 +22,7 @@ class _mapPageState extends State<mapPage> {
     List<Vehicle> _vehicles = await API.getVehicles(true);
 
     for(int i = 0;i < _vehicles.length;i++){
-      if (_vehicles[i].model.contains(query)){
+      if (_vehicles[i].model!.contains(query)){
         vehicles.add(_vehicles[i]);
       }
     }
@@ -70,14 +70,14 @@ class _mapPageState extends State<mapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: SlidingUpPanel(
-          minHeight: 50,
-          color: Theme.of(context).backgroundColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(25),
-            topRight: Radius.circular(25),
-          ),
-          panel: buildSlideUpPanel(),
-          body: buildStack()
+            minHeight: 50,
+            color: Theme.of(context).backgroundColor,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(25),
+              topRight: Radius.circular(25),
+            ),
+            panel: buildSlideUpPanel(),
+            body: buildStack()
         )
     );
   }
@@ -114,6 +114,14 @@ class _mapPageState extends State<mapPage> {
       child: Stack(
         children: [
           Container(
+            padding: EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                Text("Displaying 0 vehicles",style: TextStyle(color: Colors.lime),),
+              ],
+            ),
+          ),
+          Container(
             padding: EdgeInsets.all(22.5),
             child: Align(
               alignment: Alignment.topCenter,
@@ -128,7 +136,7 @@ class _mapPageState extends State<mapPage> {
             ),
           ),
           FutureBuilder(
-            future: getVehicles("Ikarus"),
+            future: getVehicles("Ikarus 4"),
             builder: (context, snapshot){
               if (snapshot.connectionState == ConnectionState.done){
                 return Container(
@@ -136,11 +144,7 @@ class _mapPageState extends State<mapPage> {
                   child: ListView.builder(
                     itemCount: vehicles.length,
                     itemBuilder: (BuildContext context, int i){
-                      return Container(
-                        color: Theme.of(context).backgroundColor,
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(vehicles[i].model),
-                      );
+                      return buildListItem(i);
                     },
                   ),
                 );
@@ -151,6 +155,48 @@ class _mapPageState extends State<mapPage> {
           )
         ],
       ),
+    );
+  }
+
+  Widget buildListItem(int i){
+    return Card(
+        child: Container(
+          padding: EdgeInsets.all(0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Chip(
+                    backgroundColor: Colors.blue,
+                    label: Text(vehicles[i].licensePlate!),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+                  ),
+                  Text(vehicles[i].model!)
+                ],
+              ),
+              Row(
+                children: [
+                  Chip(
+                    backgroundColor: Colors.blue,
+                    label: Text(vehicles[i].licensePlate!),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+                  ),
+                  Text(vehicles[i].model!)
+                ],
+              ),
+              Row(
+                children: [
+                  Chip(
+                    backgroundColor: Colors.blue,
+                    label: Text(vehicles[i].licensePlate!),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))),
+                  ),
+                  Text(vehicles[i].model!)
+                ],
+              )
+            ],
+          ),
+        )
     );
   }
 
